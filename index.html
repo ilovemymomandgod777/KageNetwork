@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Private Cloud Storage</title>
     <style>
-        body { font-family: 'Segoe UI', Arial, sans-serif; background: #0c0f12; color: #fff; margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; box-sizing: border-box; }
+        body { font-family: sans-serif; background: #0c0f12; color: #fff; margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; box-sizing: border-box; }
         .gate-container { background: #161b22; padding: 40px; border-radius: 8px; border: 1px solid #58a6ff; text-align: center; box-shadow: 0 0 20px rgba(88, 166, 255, 0.15); max-width: 400px; width: 100%; }
         input, button { padding: 12px; font-size: 16px; border-radius: 6px; border: none; outline: none; margin: 5px; box-sizing: border-box; }
         input[type="password"], input[type="text"], input[type="number"] { background: #0d1117; color: #fff; border: 1px solid #30363d; width: 100%; text-align: center; margin-bottom: 15px; }
@@ -38,16 +38,16 @@
 </head>
 <body>
 
-    <!-- 1. GAUNTLET ENTRY -->
+    <!-- 1. ENTRY SECURITY GATE -->
     <div id="secure-gate" class="gate-container">
         <h2 style="margin-top: 0; color: #c9d1d9;">🔒 Secure Core Entry</h2>
         <p style="color: #8b949e; font-size: 14px; margin-bottom: 25px;">Cryptographic verification is required to build the interface.</p>
         <input type="password" id="vault-key" placeholder="System Access Code">
-        <button onclick="unlockVault()">Decrypt</button>
+        <button id="decrypt-btn">Decrypt</button>
         <p id="error-msg" style="color: #f85149; font-size: 14px; margin-top: 15px; display: none;">Key pairing rejected. Authentication failed.</p>
     </div>
 
-    <!-- 2. CORE LAYOUT APP -->
+    <!-- 2. MAIN HUB INTERFACE -->
     <div id="app-vault">
         <div class="header-area">
             <h2 style="margin:0; color: #c9d1d9;">📡 Global Anime Discovery Core</h2>
@@ -55,9 +55,9 @@
         </div>
 
         <div class="search-controls">
-            <input type="text" id="mainSearch" class="search-bar" placeholder="Type any anime name (e.g., Bleach, Naruto, One Piece)..." onkeypress="handleKeyPress(event)">
+            <input type="text" id="mainSearch" class="search-bar" placeholder="Type any anime name (e.g., Naruto, Bleach, One Piece)...">
             <input type="number" id="episodeTarget" class="ep-input" placeholder="Ep #" value="1" min="1">
-            <button class="search-btn" onclick="executeGlobalSearch()">Search Archive</button>
+            <button id="search-action-btn" class="search-btn">Search Archive</button>
         </div>
 
         <div class="grid" id="vaultCollection">
@@ -65,105 +65,100 @@
         </div>
     </div>
 
-    <!-- 3. UNIFIED MEDIA INTERFACE MODAL -->
+    <!-- 3. UNIFIED VIDEO PORTAL MODAL -->
     <div id="mediaPortal" class="modal">
-        <button class="close-btn" onclick="terminateStream()">✕</button>
+        <button class="close-btn" id="close-portal-btn">✕</button>
         <h3 id="streamContext" style="margin-top:25px; color:#58a6ff;">Loading video container...</h3>
         <iframe id="playerNode" src="" allowfullscreen="true" scrolling="no" frameborder="0"></iframe>
     </div>
 
+    <!-- COMPLETE JAVASCRIPT APP LOGIC Engine -->
     <script>
-        const TARGET_KEY = "@14231423@#";
-
-        function unlockVault() {
-            const inputPass = document.getElementById('vault-key').value;
-            const errorElement = document.getElementById('error-msg');
-
-            if (inputPass === TARGET_KEY) {
-                errorElement.style.display = "none";
-                document.getElementById('secure-gate').style.display = "none";
+        // Bind UI action nodes explicitly on window initialization
+        document.getElementById("decrypt-btn").addEventListener("click", function() {
+            var val = document.getElementById("vault-key").value;
+            var err = document.getElementById("error-msg");
+            if (val === "@14231423@#") {
+                err.style.display = "none";
+                document.getElementById("secure-gate").style.display = "none";
                 document.body.style.display = "block";
-                document.getElementById('app-vault').style.display = "block";
-                
+                document.getElementById("app-vault").style.display = "block";
                 fetchTrendingAnime();
             } else {
-                errorElement.style.display = "block";
-                document.getElementById('vault-key').value = "";
+                err.style.display = "block";
+                document.getElementById("vault-key").value = "";
             }
+        });
+
+        document.getElementById("search-action-btn").addEventListener("click", executeGlobalSearch);
+        document.getElementById("mainSearch").addEventListener("keypress", function(e) {
+            if (e.key === "Enter") { executeGlobalSearch(); }
+        });
+        document.getElementById("close-portal-btn").addEventListener("click", terminateStream);
+
+        function fetchTrendingAnime() {
+            fetch("https://kitsu.io[limit]=10")
+                .then(function(res) { return res.json(); })
+                .then(function(parsed) { renderCards(parsed.data); })
+                .catch(function(e) { console.log("Trending query dropped."); });
         }
 
-        function handleKeyPress(event) {
-            if (event.key === "Enter") {
-                executeGlobalSearch();
-            }
-        }
-
-        async function fetchTrendingAnime() {
-            try {
-                let response = await fetch('https://kitsu.io[limit]=10');
-                let parsed = await response.json();
-                renderCards(parsed.data);
-            } catch(e) {
-                console.log("Error loading trending index.");
-            }
-        }
-
-        async function executeGlobalSearch() {
-            const query = document.getElementById('mainSearch').value.trim();
-            const container = document.getElementById('vaultCollection');
-            if(!query) return;
+        function executeGlobalSearch() {
+            var query = document.getElementById("mainSearch").value.trim();
+            var container = document.getElementById("vaultCollection");
+            if (!query) return;
 
             container.innerHTML = '<p style="color: #58a6ff; grid-column: 1/-1; text-align: center; margin-top: 40px;">Indexing live endpoints from global registers...</p>';
 
-            try {
-                let targetUrl = 'https://kitsu.io[text]=' + encodeURIComponent(query) + '&page[limit]=16';
-                let response = await fetch(targetUrl);
-                let parsedResult = await response.json();
-
-                if(parsedResult && parsedResult.data && parsedResult.data.length > 0) {
-                    renderCards(parsedResult.data);
-                } else {
-                    container.innerHTML = '<p style="color: #f85149; grid-column: 1/-1; text-align: center; margin-top: 40px;">Zero records found matching query parameters.</p>';
-                }
-            } catch(err) {
-                container.innerHTML = '<p style="color: #f85149; grid-column: 1/-1; text-align: center; margin-top: 40px;">Database registry timeout error.</p>';
-            }
+            fetch("https://kitsu.io[text]=" + encodeURIComponent(query) + "&page[limit]=16")
+                .then(function(res) { return res.json(); })
+                .then(function(parsedResult) {
+                    if (parsedResult && parsedResult.data && parsedResult.data.length > 0) {
+                        renderCards(parsedResult.data);
+                    } else {
+                        container.innerHTML = '<p style="color: #f85149; grid-column: 1/-1; text-align: center; margin-top: 40px;">Zero records found matching query parameters.</p>';
+                    }
+                })
+                .catch(function(err) {
+                    container.innerHTML = '<p style="color: #f85149; grid-column: 1/-1; text-align: center; margin-top: 40px;">Database registry timeout error.</p>';
+                });
         }
 
         function renderCards(animeList) {
-            const container = document.getElementById('vaultCollection');
-            const targetEp = parseInt(document.getElementById('episodeTarget').value) || 1;
+            var container = document.getElementById("vaultCollection");
+            var targetEp = parseInt(document.getElementById("episodeTarget").value) || 1;
+            var htmlOutput = "";
 
-            container.innerHTML = animeList.map(item => {
-                const attributes = item.attributes;
-                const title = attributes.canonicalTitle || attributes.en || attributes.en_jp;
-                const poster = attributes.posterImage ? attributes.posterImage.medium : 'https://placeholder.com';
-                const searchSlug = attributes.slug || title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+            for (var i = 0; i < animeList.length; i++) {
+                var item = animeList[i];
+                var attr = item.attributes;
+                var title = attr.canonicalTitle || attr.en || attr.en_jp;
+                var poster = attr.posterImage ? attr.posterImage.medium : "https://placeholder.com";
+                var searchSlug = attr.slug || title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 
-                return '<div class="card">' +
-                        '<div class="poster-wrapper">' +
-                            '<img class="poster-img" src="' + poster + '" alt="' + title + '" loading="lazy">' +
+                htmlOutput += '<div class="card">' +
+                    '<div class="poster-wrapper">' +
+                        '<img class="poster-img" src="' + poster + '" alt="' + title + '" loading="lazy">' +
+                    '</div>' +
+                    '<div class="card-details">' +
+                        '<h3 class="card-title" title="' + title + '">' + title + '</h3>' +
+                        '<div>' +
+                            '<span style="font-size:11px; color:#58a6ff; background:rgba(88,166,255,0.1); padding:3px 8px; border-radius:12px; font-family:monospace; display:inline-block; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">ID: ' + searchSlug + '</span>' +
+                            '<button class="play-btn" onclick="initializeStream(\'' + searchSlug + '\', ' + targetEp + ')">▶ Stream Ep ' + targetEp + '</button>' +
                         '</div>' +
-                        '<div class="card-details">' +
-                            '<h3 class="card-title" title="' + title + '">' + title + '</h3>' +
-                            '<div>' +
-                                '<span style="font-size:11px; color:#58a6ff; background:rgba(88,166,255,0.1); padding:3px 8px; border-radius:12px; font-family:monospace; display:inline-block; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">ID: ' + searchSlug + '</span>' +
-                                '<button class="play-btn" onclick="initializeStream(\'' + searchSlug + '\', ' + targetEp + ')">▶ Stream Ep ' + targetEp + '</button>' +
-                            '</div>' +
-                        '</div>' +
-                    '</div>';
-            }).join('');
+                    '</div>' +
+                '</div>';
+            }
+            container.innerHTML = htmlOutput;
         }
 
         function initializeStream(slug, ep) {
-            document.getElementById('mediaPortal').style.display = "block";
-            document.getElementById('streamContext').innerText = "Streaming Asset: " + slug.toUpperCase() + " (Episode " + ep + ")";
-            
-let embedUrl = 'vidsrc.me' + slug + '/' + ep;
-document.getElementById('playerNode').src = embedUrl;
+Use code with caution.
+document.getElementById("mediaPortal").style.display = "block";
+document.getElementById("streamContext").innerText = "Streaming Asset: " + slug.toUpperCase() + " (Episode " + ep + ")";
+document.getElementById("playerNode").src = "vidsrc.me" + slug + "/" + ep;
 }
 function terminateStream() {
-let frame = document.getElementById('playerNode');
-frame.src = "";
-document.getElementById('mediaPortal').style.display = "none";
+document.getElementById("playerNode").src = "";
+document.getElementById("mediaPortal").style.display = "none";
 }
