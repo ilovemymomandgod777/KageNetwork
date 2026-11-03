@@ -9,7 +9,7 @@
         
         /* PREMIUM HEADER NAVIGATION */
         .navbar { background: #14161d; border-bottom: 1px solid #222531; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
-        .brand-logo { font-size: 22px; font-weight: 800; color: #3b82f6; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 8px; }
+        .brand-logo { font-size: 22px; font-weight: 800; color: #3b82f6; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 8px; cursor: pointer;}
         
         /* SEARCH CONTAINER LOGIC */
         .search-wrapper { display: flex; align-items: center; background: #1f222e; border: 1px solid #2d3142; border-radius: 20px; padding: 5px 15px; width: 400px; }
@@ -28,7 +28,7 @@
         .card { background: #14161d; border-radius: 8px; overflow: hidden; transition: transform 0.2s, box-shadow 0.2s; display: flex; flex-direction: column; cursor: pointer; position: relative; }
         .card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
         
-        /* ANIME POSTER WORKSPACE IMAGES */
+        /* ANIME POSTER IMAGES */
         .poster-box { width: 100%; height: 280px; position: relative; background: #07080a; overflow: hidden; }
         .poster-img { width: 100%; height: 100%; object-fit: cover; }
         
@@ -45,50 +45,49 @@
         /* OVERLAY VIEWPORT PLAYER MODAL */
         .modal { display:none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); text-align:center; z-index: 9999; }
         iframe { width: 90%; max-width: 1000px; height: 560px; margin-top: 5%; border: 2px solid #222531; background: #000; box-shadow: 0 0 40px rgba(0,0,0,0.8); border-radius: 8px; }
-        .close-btn { position:absolute; top:25px; right:35px; background:none; color:#3b82f6; font-size:36px; border:none; cursor:pointer; transition: 0.2s; }
+        .close-btn { position:absolute; top:25px; right:35px; background:none; color: #ff4d4d; font-size:36px; border:none; cursor:pointer; transition: 0.2s; }
         .close-btn:hover { color: white; transform: scale(1.1); }
     </style>
 </head>
 <body>
 
-    <!-- HIGH ACCESSIBILITY APPLICATION LAYER CONTAINER -->
+    <!-- APPLICATION VIEWPORT WRAPPER -->
     <div id="app-vault">
         
-        <!-- HEADER DASHBOARD BANNER -->
+        <!-- TOP NAVIGATION BANNER BAR -->
         <div class="navbar">
-            <div class="brand-logo">▶ Anime Cloud Stream</div>
+            <div class="brand-logo" id="brand-home-logo">▶ Anime Cloud Stream</div>
             <div class="search-wrapper">
-                <input type="text" id="mainSearch" class="search-bar" placeholder="Search across thousands of titles instantly...">
+                <input type="text" id="mainSearch" class="search-bar" placeholder="Search titles across directory registers...">
                 <button id="search-trigger-btn" class="search-btn">Search</button>
             </div>
             <div></div>
         </div>
 
-        <!-- MAIN LAYOUT WRAPPER GRID -->
+        <!-- MAIN LAYOUT DISPLAY WRAPPER -->
         <div class="main-layout">
             
             <div class="section-header">
                 <h3 class="section-title" id="display-context-title">Latest Release</h3>
-                <span class="view-all-label">View All</span>
+                <span class="view-all-label" id="view-all-home-action">Reset View</span>
             </div>
 
             <div class="grid" id="vaultCollection">
-                <!-- Dynamically populated card blocks inject right inside here -->
+                <!-- Javascript populates cards internally inside this layer -->
             </div>
             
         </div>
     </div>
 
-    <!-- UNIFIED HIGH SPEED MEDIA PLAYER MODAL VIEWPORT -->
+    <!-- STABLE MEDIA IFRAME STREAM MODAL CONTAINER -->
     <div id="mediaPortal" class="modal">
         <button class="close-btn" id="modal-close-btn">✕</button>
-        <h3 id="streamContext" style="margin-top:20px; color:#3b82f6; font-size: 16px;">Connecting server media components...</h3>
+        <h3 id="streamContext" style="margin-top:20px; color:#3b82f6; font-size: 16px;">Loading secure embedded video layout...</h3>
         <iframe id="playerNode" src="" allowfullscreen="true" scrolling="no" frameborder="0"></iframe>
     </div>
 
     <script>
         document.addEventListener("DOMContentLoaded", function() {
-            // Automatically launch the trending dashboard and remove password block dependency
             fetchTrendingAnime();
 
             document.getElementById("search-trigger-btn").addEventListener("click", executeGlobalSearch);
@@ -96,13 +95,19 @@
                 if (event.key === "Enter") { executeGlobalSearch(); }
             });
             document.getElementById("modal-close-btn").addEventListener("click", terminateStream);
+            document.getElementById("brand-home-logo").addEventListener("click", fetchTrendingAnime);
+            document.getElementById("view-all-home-action").addEventListener("click", fetchTrendingAnime);
 
             function fetchTrendingAnime() {
                 document.getElementById("display-context-title").innerText = "Latest Release";
-                fetch("https://kitsu.io[limit]=15")
+                document.getElementById("mainSearch").value = "";
+                var container = document.getElementById("vaultCollection");
+                container.innerHTML = '<p style="color: #3b82f6; grid-column: 1/-1; text-align: center; margin-top: 50px; font-weight: bold;">Loading updates...</p>';
+
+                fetch("https://kitsu.io[limit]=18")
                     .then(function(res) { return res.json(); })
                     .then(function(parsed) { renderCards(parsed.data); })
-                    .catch(function(e) { console.log("Trending catalog array tracking dropped."); });
+                    .catch(function(e) { console.log("Trending index array failed parsing."); });
             }
 
             function executeGlobalSearch() {
@@ -111,7 +116,7 @@
                 if (!query) return;
 
                 document.getElementById("display-context-title").innerText = "Search Results: " + query;
-                container.innerHTML = '<p style="color: #3b82f6; grid-column: 1/-1; text-align: center; margin-top: 50px; font-weight: bold;">Compiling dynamic directory entries from cloud servers...</p>';
+                container.innerHTML = '<p style="color: #3b82f6; grid-column: 1/-1; text-align: center; margin-top: 50px; font-weight: bold;">Compiling dynamic directory entries...</p>';
 
                 fetch("https://kitsu.io[text]=" + encodeURIComponent(query) + "&page[limit]=18")
                     .then(function(res) { return res.json(); })
@@ -119,11 +124,11 @@
                         if (parsedResult && parsedResult.data && parsedResult.data.length > 0) {
                             renderCards(parsedResult.data);
                         } else {
-                            container.innerHTML = '<p style="color: #ef4444; grid-column: 1/-1; text-align: center; margin-top: 50px;">No directory profiles matched your request variables.</p>';
+                            container.innerHTML = '<p style="color: #ef4444; grid-column: 1/-1; text-align: center; margin-top: 50px;">No matches found inside database registers.</p>';
                         }
                     })
                     .catch(function(err) {
-                        container.innerHTML = '<p style="color: #ef4444; grid-column: 1/-1; text-align: center; margin-top: 50px;">Global cloud index tracking connection timed out.</p>';
+                        container.innerHTML = '<p style="color: #ef4444; grid-column: 1/-1; text-align: center; margin-top: 50px;">Directory request channel timed out.</p>';
                     });
             }
 
@@ -141,14 +146,13 @@
                     var totalEps = attr.episodeCount || "??";
                     var currentEpNum = totalEps !== "??" ? Math.floor(Math.random() * totalEps) + 1 : 1; 
 
-                    // FIXED: Cursor now defaults to interactive pointers natively on hover across entire card container limits
                     htmlOutput += '<div class="card" onclick="window.initializeStream(\'' + searchSlug + '\', ' + currentEpNum + ')">' +
                         '<div class="poster-box">' +
                             '<img class="poster-img" src="' + poster + '" alt="' + title + '" loading="lazy">' +
-                            '<div class="badge-type">Anime</div>' +
-                            '<div class="badge-ep">Ep ' + currentEpNum + '</div>' +
-                            '<div class="badge-lang">Sub</div>' +
 Use code with caution.
+'Anime' +
+'Ep ' + currentEpNum + '' +
+'Sub' +
 '' +
 '' +
 '' + title + '' +
@@ -157,10 +161,11 @@ Use code with caution.
 }
 container.innerHTML = htmlOutput;
 }
+// MODIFIED: Patched embed layout to query active vidlink.pro systems for real streams
 window.initializeStream = function(slug, ep) {
 document.getElementById("mediaPortal").style.display = "block";
-document.getElementById("streamContext").innerText = "Streaming Resource Manifest: " + slug.toUpperCase() + " (Episode " + ep + ")";
-document.getElementById("playerNode").src = "vidsrc.me" + slug + "/" + ep;
+document.getElementById("streamContext").innerText = "Streaming Index: " + slug.toUpperCase() + " (Episode " + ep + ")";
+document.getElementById("playerNode").src = "vidlink.pro" + slug + "/" + ep;
 };
 function terminateStream() {
 document.getElementById("playerNode").src = "";
