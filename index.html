@@ -4,31 +4,37 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Private Cloud Storage</title>
-    <!-- CryptoJS Library for processing client-side encryption layers -->
-    <script src="https://cloudflare.com"></script>
     <style>
         body { font-family: 'Segoe UI', Arial, sans-serif; background: #0c0f12; color: #fff; margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; box-sizing: border-box; }
         .gate-container { background: #161b22; padding: 40px; border-radius: 8px; border: 1px solid #58a6ff; text-align: center; box-shadow: 0 0 20px rgba(88, 166, 255, 0.15); max-width: 400px; width: 100%; }
         input, button { padding: 12px; font-size: 16px; border-radius: 6px; border: none; outline: none; margin: 5px; box-sizing: border-box; }
-        input[type="password"], input[type="text"] { background: #0d1117; color: #fff; border: 1px solid #30363d; width: 100%; text-align: center; margin-bottom: 15px; }
-        input[type="password"]:focus, input[type="text"]:focus { border-color: #58a6ff; }
+        input[type="password"], input[type="text"], input[type="number"] { background: #0d1117; color: #fff; border: 1px solid #30363d; width: 100%; text-align: center; margin-bottom: 15px; }
+        input:focus { border-color: #58a6ff; }
         button { background: #58a6ff; color: #0c0f12; font-weight: bold; cursor: pointer; transition: 0.2s; width: 100%; }
         button:hover { background: #79c0ff; }
         
-        /* Dashboard Interface Layout (Hidden until unlocked) */
+        /* Dashboard Interface Layout */
         #app-vault { display: none; width: 100%; max-width: 1200px; align-self: flex-start; margin-top: 20px; }
         .header-area { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #21262d; padding-bottom: 20px; margin-bottom: 25px; }
-        .search-bar { width: 100%; padding: 15px; font-size: 16px; background: #161b22; border: 1px solid #30363d; color: white; border-radius: 6px; margin-bottom: 25px; }
-        .search-bar:focus { border-color: #58a6ff; outline: none; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
-        .card { background: #161b22; padding: 20px; border-radius: 8px; border: 1px solid #30363d; transition: 0.2s; position: relative; }
-        .card:hover { border-color: #58a6ff; transform: translateY(-2px); }
-        .play-btn { background: #238636; color: white; font-weight: bold; width: 100%; cursor: pointer; margin-top: 15px; }
-        .play-btn:hover { background: #2ea043; }
+        .search-controls { display: flex; gap: 10px; margin-bottom: 25px; }
+        .search-bar { flex: 1; padding: 15px; font-size: 16px; background: #161b22; border: 1px solid #30363d; color: white; border-radius: 6px; margin-bottom: 0; }
+        .ep-input { width: 120px; margin-bottom: 0; }
+        .search-btn { width: 150px; background: #238636; color: white; margin: 0; }
+        .search-btn:hover { background: #2ea043; }
+        
+        /* Dynamic Poster Card Grid Layout */
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 25px; }
+        .card { background: #161b22; border-radius: 8px; border: 1px solid #30363d; transition: 0.2s; position: relative; overflow: hidden; display: flex; flex-direction: column; }
+        .card:hover { border-color: #58a6ff; transform: translateY(-4px); }
+        .poster-wrapper { width: 100%; height: 300px; background: #0d1117; position: relative; }
+        .poster-img { width: 100%; height: 100%; object-fit: cover; }
+        .card-details { padding: 15px; flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
+        .card-title { margin: 0 0 10px 0; color: #c9d1d9; font-size: 16px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .play-btn { background: #58a6ff; color: #0c0f12; font-weight: bold; width: 100%; cursor: pointer; margin-top: 10px; padding: 10px; }
         
         /* Streaming Overlay Modal */
         .modal { display:none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); text-align:center; z-index: 9999; }
-        video { width: 90%; max-width: 950px; margin-top: 5%; border: 1px solid #30363d; background: #000; box-shadow: 0 0 30px rgba(0,0,0,0.7); border-radius: 6px; }
+        iframe { width: 90%; max-width: 950px; height: 550px; margin-top: 5%; border: 1px solid #30363d; background: #000; box-shadow: 0 0 30px rgba(0,0,0,0.7); border-radius: 6px; }
         .close-btn { position:absolute; top:25px; right:35px; background:none; color:#8b949e; font-size:32px; border:none; cursor:pointer; }
         .close-btn:hover { color: white; }
     </style>
@@ -40,113 +46,116 @@
         <h2 style="margin-top: 0; color: #c9d1d9;">🔒 Secure Core Entry</h2>
         <p style="color: #8b949e; font-size: 14px; margin-bottom: 25px;">Cryptographic verification is required to build the interface.</p>
         <input type="password" id="vault-key" placeholder="System Access Code">
-        <button onclick="unlockVault()">Unpack Archive</button>
+        <button onclick="unlockVault()">Decrypt</button>
         <p id="error-msg" style="color: #f85149; font-size: 14px; margin-top: 15px; display: none;">Key pairing rejected. Authentication failed.</p>
     </div>
 
     <!-- 2. PROTECTED INTERFACE AREA -->
     <div id="app-vault">
         <div class="header-area">
-            <h2 style="margin:0; color: #c9d1d9;">📡 Private Media Vault</h2>
-            <button onclick="location.reload()" style="background: #da3633; color: white; width: auto; padding: 8px 15px;">Lock Drive</button>
+            <h2 style="margin:0; color: #c9d1d9;">📡 Global Anime Discovery Core</h2>
+            <button onclick="location.reload()" style="background: #da3633; color: white; width: auto; padding: 8px 15px; margin: 0;">Lock Drive</button>
         </div>
 
-        <input type="text" id="mainSearch" class="search-bar" placeholder="Instant index search..." onkeyup="filterVault()">
+        <!-- Global Search Controller Inputs -->
+        <div class="search-controls">
+            <input type="text" id="mainSearch" class="search-bar" placeholder="Type any anime name (e.g., Bleach, Naruto, Boruto)..." onkeypress="handleKeyPress(event)">
+            <input type="number" id="episodeTarget" class="ep-input" placeholder="Ep #" value="1" min="1">
+            <button class="search-btn" onclick="executeGlobalSearch()">Search Archive</button>
+        </div>
 
-        <div class="grid" id="vaultCollection"></div>
+        <div class="grid" id="vaultCollection">
+            <p style="color: #8b949e; grid-column: 1/-1; text-align: center; margin-top: 40px;">Type a title above and trigger the search engine to index live database cards.</p>
+        </div>
     </div>
 
     <!-- 3. UNIFIED MEDIA INTERFACE MODAL -->
     <div id="mediaPortal" class="modal">
         <button class="close-btn" onclick="terminateStream()">✕</button>
-        <h3 id="streamContext" style="margin-top:25px; color:#58a6ff;">Initializing live stream resolution engine...</h3>
-        <video id="playerNode" controls autoplay src=""></video>
+        <h3 id="streamContext" style="margin-top:25px; color:#58a6ff;">Loading video container...</h3>
+        <iframe id="playerNode" src="" allowfullscreen="true" scrolling="no" frameborder="0"></iframe>
     </div>
 
     <script>
-        // System Master Password
         const TARGET_KEY = "@14231423@#";
-
-        // Your custom anime video database tracking metrics. 
-        // Edit this array list to add, remove, or modify titles or episode selections!
-        const databasePayload = [
-            { title: "Chainsaw Man", slug: "chainsaw-man-tv", ep: 1 },
-            { title: "Attack on Titan: Final Season", slug: "shingeki-no-kyojin-the-final-season", ep: 1 },
-            { title: "Demon Slayer", slug: "kimetsu-no-yaiba-hashira-geiko-hen", ep: 1 },
-            { title: "Jujutsu Kaisen Season 2", slug: "jujutsu-kaisen-2nd-season", ep: 1 },
-            { title: "One Piece", slug: "one-piece", ep: 1100 }
-        ];
 
         function unlockVault() {
             const inputPass = document.getElementById('vault-key').value;
             const errorElement = document.getElementById('error-msg');
 
-            // Verify configuration codes locally
             if (inputPass === TARGET_KEY) {
                 errorElement.style.display = "none";
                 document.getElementById('secure-gate').style.display = "none";
-                document.body.style.display = "block"; // Drop centering structure
+                document.body.style.display = "block";
                 document.getElementById('app-vault').style.display = "block";
                 
-                // Mount tracking index straight to template UI cards
-                renderCards(databasePayload);
+                // Load trending anime automatically on login as a placeholder placeholder
+                fetchTrendingAnime();
             } else {
                 errorElement.style.display = "block";
                 document.getElementById('vault-key').value = "";
             }
         }
 
-        function renderCards(data) {
-            const container = document.getElementById('vaultCollection');
-            container.innerHTML = data.map(anime => `
-                <div class="card" data-searchname="${anime.title.toLowerCase()}">
-                    <h3 style="margin:0 0 8px 0; color:#c9d1d9;">${anime.title}</h3>
-                    <span style="font-size:11px; color:#58a6ff; background:rgba(88,166,255,0.1); padding:3px 8px; border-radius:12px; font-family:monospace;">ID: ${anime.slug}</span>
-                    <p style="margin:20px 0 5px 0; color:#8b949e; font-size:14px;">Target Index: <b>Episode ${anime.ep}</b></p>
-                    <button class="play-btn" onclick="initializeStream('${anime.slug}', ${anime.ep})">▶ Launch Cloud Stream</button>
-                </div>
-            `).join('');
-        }
-
-        function filterVault() {
-            let text = document.getElementById('mainSearch').value.toLowerCase();
-            document.querySelectorAll('.card').forEach(item => {
-                item.style.display = item.getAttribute('data-searchname').includes(text) ? "block" : "none";
-            });
-        }
-
-        async function initializeStream(slug, ep) {
-            document.getElementById('mediaPortal').style.display = "block";
-            document.getElementById('streamContext').innerText = "Querying secondary live API scraping mirrors for active video payloads...";
-            
-            try {
-                // MODIFIED: Patched proxy pipeline routing to hit active backend service clusters
-                let trackingEndpoint = `https://vercel.app{slug}-episode-${ep}`;
-                let response = await fetch(trackingEndpoint);
-                let parsedResult = await response.json();
-                
-                if (parsedResult && parsedResult.sources && parsedResult.sources.length > 0) {
-                    // Extract the highest performance streaming source file structure
-                    let streamingSourceUrl = parsedResult.sources[0].url;
-                    
-                    document.getElementById('streamContext').innerText = "Streaming Asset: " + slug.toUpperCase() + " (Episode " + ep + ")";
-                    document.getElementById('playerNode').src = streamingSourceUrl;
-                } else {
-                    alert("Scraper Pipeline Error: Target video server returned an empty array.");
-                    terminateStream();
-                }
-            } catch(err) {
-                alert("Network Failure: The scraper instance timed out. Please try another title/episode or try again later.");
-                terminateStream();
+        function handleKeyPress(event) {
+            if (event.key === "Enter") {
+                executeGlobalSearch();
             }
         }
 
-        function terminateStream() {
-            let videoElement = document.getElementById('playerNode');
-            videoElement.pause();
-            videoElement.src = "";
-            document.getElementById('mediaPortal').style.display = "none";
+        // Fetches live trending items automatically via Kitsu platform
+        async function fetchTrendingAnime() {
+            try {
+                let response = await fetch('https://kitsu.io[limit]=10');
+                let parsed = await response.json();
+                renderCards(parsed.data);
+            } catch(e) {
+                console.log("Error loading trending index.");
+            }
         }
-    </script>
-</body>
-</html>
+
+        // Live engine queries database on demand
+        async function executeGlobalSearch() {
+            const query = document.getElementById('mainSearch').value.trim();
+            const container = document.getElementById('vaultCollection');
+            if(!query) return;
+
+            container.innerHTML = `<p style="color: #58a6ff; grid-column: 1/-1; text-align: center; margin-top: 40px;">Indexing live endpoints from global registers...</p>`;
+
+            try {
+                // Hits Kitsu API directly from the client side browser environment
+                let targetUrl = `https://kitsu.io[text]=${encodeURIComponent(query)}&page[limit]=16`;
+                let response = await fetch(targetUrl);
+                let parsedResult = await response.json();
+
+                if(parsedResult && parsedResult.data && parsedResult.data.length > 0) {
+                    renderCards(parsedResult.data);
+                } else {
+                    container.innerHTML = `<p style="color: #f85149; grid-column: 1/-1; text-align: center; margin-top: 40px;">Zero records found matching query parameters.</p>`;
+                }
+            } catch(err) {
+                container.innerHTML = `<p style="color: #f85149; grid-column: 1/-1; text-align: center; margin-top: 40px;">Database registry timeout error.</p>`;
+            }
+        }
+
+        function renderCards(animeList) {
+            const container = document.getElementById('vaultCollection');
+            const targetEp = parseInt(document.getElementById('episodeTarget').value) || 1;
+
+            container.innerHTML = animeList.map(item => {
+                const attributes = item.attributes;
+                const title = attributes.canonicalTitle || attributes.en || attributes.en_jp;
+                // Safely grab the high quality portrait image string variable from JSON structures
+                const poster = attributes.posterImage ? attributes.posterImage.medium : 'https://placeholder.com';
+                // Slug parameter string conversions
+                const searchSlug = attributes.slug || title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+
+                return `
+                    <div class="card">
+                        <div class="poster-wrapper">
+                            <img class="poster-img" src="${poster}" alt="${title}" loading="lazy">
+                        </div>
+                        <div class="card-details">
+                            <h3 class="card-title" title="${title}">${title}</h3>
+                            <div>
+                                <span style="font-size:11px; color:#58a6ff; background:rgba(88,166,255,0.1); padding:3px 8px; border-radius:12px; font-family:monospace; display:inline-block; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">ID: ${searchSlug}</span>
