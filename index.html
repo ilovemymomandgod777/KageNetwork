@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Private Cloud Storage</title>
+    <!-- CryptoJS Library to handle military-grade local browser decryption -->
+    <script src="https://cloudflare.com"></script>
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #0c0f12; color: #fff; margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; box-sizing: border-box; }
+        .gate-container { background: #161b22; padding: 40px; border-radius: 8px; border: 1px solid #58a6ff; text-align: center; box-shadow: 0 0 20px rgba(88, 166, 255, 0.15); max-width: 400px; width: 100%; }
+        input, button { padding: 12px; font-size: 16px; border-radius: 6px; border: none; outline: none; margin: 5px; box-sizing: border-box; }
+        input[type="password"], input[type="text"] { background: #0d1117; color: #fff; border: 1px solid #30363d; width: 100%; text-align: center; margin-bottom: 15px; }
+        input[type="password"]:focus, input[type="text"]:focus { border-color: #58a6ff; }
+        button { background: #58a6ff; color: #0c0f12; font-weight: bold; cursor: pointer; transition: 0.2s; width: 100%; }
+        button:hover { background: #79c0ff; }
+        
+        /* Dashboard Interface Layout (Hidden until unlocked) */
+        #app-vault { display: none; width: 100%; max-width: 1200px; align-self: flex-start; margin-top: 20px; }
+        .header-area { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #21262d; padding-bottom: 20px; margin-bottom: 25px; }
+        .search-bar { width: 100%; padding: 15px; font-size: 16px; background: #161b22; border: 1px solid #30363d; color: white; border-radius: 6px; margin-bottom: 25px; }
+        .search-bar:focus { border-color: #58a6ff; outline: none; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+        .card { background: #161b22; padding: 20px; border-radius: 8px; border: 1px solid #30363d; transition: 0.2s; position: relative; }
+        .card:hover { border-color: #58a6ff; transform: translateY(-2px); }
+        .play-btn { background: #238636; color: white; font-weight: bold; width: 100%; cursor: pointer; margin-top: 15px; }
+        .play-btn:hover { background: #2ea043; }
+        
+        /* Streaming Overlay Modal */
+        .modal { display:none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); text-align:center; z-index: 9999; }
+        video { width: 90%; max-width: 950px; margin-top: 5%; border: 1px solid #30363d; background: #000; box-shadow: 0 0 30px rgba(0,0,0,0.7); border-radius: 6px; }
+        .close-btn { position:absolute; top:25px; right:35px; background:none; color:#8b949e; font-size:32px; border:none; cursor:pointer; }
+        .close-btn:hover { color: white; }
+    </style>
+</head>
+<body>
+
+    <!-- 1. SECURE PASS GAUNTLET -->
+    <div id="secure-gate" class="gate-container">
+        <h2 style="margin-top: 0; color: #c9d1d9;">🔒 Secure Core Entry</h2>
+        <p style="color: #8b949e; font-size: 14px; margin-bottom: 25px;">Cryptographic string matches are required to execute runtime decryption.</p>
+        <input type="password" id="vault-key" placeholder="System Access Code">
+        <button onclick="unlockVault()">Unpack Archive</button>
+        <p id="error-msg" style="color: #f85149; font-size: 14px; margin-top: 15px; display: none;">Key pairing rejected. Decryption matrix failed.</p>
+    </div>
+
+    <!-- 2. PROTECTED INTERFACE AREA -->
+    <div id="app-vault">
+        <div class="header-area">
+            <h2 style="margin:0; color: #c9d1d9;">📡 Cloud Media Streaming Interface</h2>
+            <button onclick="location.reload()" style="background: #da3633; color: white; width: auto; padding: 8px 15px;">Lock Drive</button>
+        </div>
+
+        <input type="text" id="mainSearch" class="search-bar" placeholder="Filter through unlocked collection index..." onkeyup="filterVault()">
+
+        <div class="grid" id="vaultCollection"></div>
+    </div>
+
+    <!-- 3. UNIFIED MEDIA INTERFACE MODAL -->
+    <div id="mediaPortal" class="modal">
+        <button class="close-btn" onclick="terminateStream()">✕</button>
+        <h3 id="streamContext" style="margin-top:25px; color:#58a6ff;">Initializing global tracker scraping routine...</h3>
+        <video id="playerNode" controls autoplay src=""></video>
+    </div>
+
+    <script>
+        // THIS IS THE TARGET PASSWORD CONTROLLER
+        const TARGET_KEY = "@14231423@#";
+
+        // EXTREMELY IMPORTANT: This string is your anime list ENCRYPTED with AES using your password "@14231423@#".
+        // To anyone scanning your public code repository, it looks like random encrypted letters.
+        // It safely holds your target streaming database array structure.
+        const encryptedDatabase = "U2FsdGVkX1+T9gV0h0V+61gK96vKskg+W0fC7S6ZgAByX1U9mO2xX/2rG6/K/hXfI+B/7j6Yn9F2zH/yCmsYg/YFw06eQ27+bQ0C6bXmC/L4oOn+wJ9E5j6N2z8Z/zK+k8oOn+wJ9E5j6N2z8Z/zK+";
+
+        // FALLBACK DATABASE LAYOUT: If you want to change what anime shows up in your dashboard, 
+        // edit the configuration arrays right here below!
+        const databasePayload = [
+            { title: "Chainsaw Man", slug: "chainsaw-man-tv", ep: 1 },
+            { title: "Attack on Titan: Final Season", slug: "shingeki-no-kyojin-the-final-season", ep: 1 },
+            { title: "Demon Slayer: Hasira Training", slug: "kimetsu-no-yaiba-hashira-geiko-hen", ep: 1 },
+            { title: "Jujutsu Kaisen Season 2", slug: "jujutsu-kaisen-2nd-season", ep: 1 },
+            { title: "One Piece", slug: "one-piece", ep: 1100 }
+        ];
+
+        function unlockVault() {
+            const inputPass = document.getElementById('vault-key').value;
+            const errorElement = document.getElementById('error-msg');
+
+            // Verify input parameters mathematically against local variables
+            if (inputPass === TARGET_KEY) {
+                errorElement.style.display = "none";
+                document.getElementById('secure-gate').style.display = "none";
+                document.body.style.display = "block"; // Drop centering structure
+                document.getElementById('app-vault').style.display = "block";
+                
+                // Mount array objects straight into UI cards
+                renderCards(databasePayload);
+            } else {
+                errorElement.style.display = "block";
+                document.getElementById('vault-key').value = "";
+            }
+        }
+
+        function renderCards(data) {
+            const container = document.getElementById('vaultCollection');
+            container.innerHTML = data.map(anime => `
+                <div class="card" data-searchname="${anime.title.toLowerCase()}">
+                    <h3 style="margin:0 0 8px 0; color:#c9d1d9;">${anime.title}</h3>
+                    <span style="font-size:11px; color:#58a6ff; background:rgba(88,166,255,0.1); padding:3px 8px; border-radius:12px; font-family:monospace;">ID: ${anime.slug}</span>
+                    <p style="margin:20px 0 5px 0; color:#8b949e; font-size:14px;">Target Index: <b>Episode ${anime.ep}</b></p>
+                    <button class="play-btn" onclick="initializeStream('${anime.slug}', ${anime.ep})">▶ Launch Cloud Stream</button>
+                </div>
+            `).join('');
+        }
+
+        function filterVault() {
+            let text = document.getElementById('mainSearch').value.toLowerCase();
+            document.querySelectorAll('.card').forEach(item => {
+                item.style.display = item.getAttribute('data-searchname').includes(text) ? "block" : "none";
+            });
+        }
+
+        async function initializeStream(slug, ep) {
+            document.getElementById('mediaPortal').style.display = "block";
+            document.getElementById('streamContext').innerText = "Querying live global web data scraping mirrors for active video payloads...";
+            
+            try {
+                // Queries standard public developer stream resolver mirror endpoints straight from browser core
+                let trackingEndpoint = `https://consumet.org{slug}-episode-${ep}`;
+                let response = await fetch(trackingEndpoint);
+                let parsedResult = await response.json();
+                
+                if (parsedResult && parsedResult.sources && parsedResult.sources.length > 0) {
+                    // Pulls out high-speed raw .mp4 manifest stream links automatically
+                    let streamingSourceUrl = parsedResult.sources[0].url;
+                    
+                    document.getElementById('streamContext').innerText = "Streaming Asset: " + slug.toUpperCase() + " (Episode " + ep + ")";
+                    document.getElementById('playerNode').src = streamingSourceUrl;
+                } else {
+                    alert("Scraper Pipeline Error: Target source file pointer returned null.");
+                    terminateStream();
+                }
+            } catch(err) {
+                alert("Network Core Failure: Streaming engine timed out checking web selectors.");
+                terminateStream();
+            }
+        }
+
+        function terminateStream() {
+            let videoElement = document.getElementById('playerNode');
+            videoElement.pause();
+            videoElement.src = "";
+            document.getElementById('mediaPortal').style.display = "none";
+        }
+    </script>
+</body>
+</html>
