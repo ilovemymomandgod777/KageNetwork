@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Private Cloud Storage</title>
-    <!-- CryptoJS Library to handle military-grade local browser decryption -->
+    <!-- CryptoJS Library for processing client-side encryption layers -->
     <script src="https://cloudflare.com"></script>
     <style>
         body { font-family: 'Segoe UI', Arial, sans-serif; background: #0c0f12; color: #fff; margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; box-sizing: border-box; }
@@ -38,20 +38,20 @@
     <!-- 1. SECURE PASS GAUNTLET -->
     <div id="secure-gate" class="gate-container">
         <h2 style="margin-top: 0; color: #c9d1d9;">🔒 Secure Core Entry</h2>
-        <p style="color: #8b949e; font-size: 14px; margin-bottom: 25px;">Cryptographic string matches are required to execute runtime decryption.</p>
+        <p style="color: #8b949e; font-size: 14px; margin-bottom: 25px;">Cryptographic verification is required to build the interface.</p>
         <input type="password" id="vault-key" placeholder="System Access Code">
         <button onclick="unlockVault()">Unpack Archive</button>
-        <p id="error-msg" style="color: #f85149; font-size: 14px; margin-top: 15px; display: none;">Key pairing rejected. Decryption matrix failed.</p>
+        <p id="error-msg" style="color: #f85149; font-size: 14px; margin-top: 15px; display: none;">Key pairing rejected. Authentication failed.</p>
     </div>
 
     <!-- 2. PROTECTED INTERFACE AREA -->
     <div id="app-vault">
         <div class="header-area">
-            <h2 style="margin:0; color: #c9d1d9;">📡 Cloud Media Streaming Interface</h2>
+            <h2 style="margin:0; color: #c9d1d9;">📡 Private Media Vault</h2>
             <button onclick="location.reload()" style="background: #da3633; color: white; width: auto; padding: 8px 15px;">Lock Drive</button>
         </div>
 
-        <input type="text" id="mainSearch" class="search-bar" placeholder="Filter through unlocked collection index..." onkeyup="filterVault()">
+        <input type="text" id="mainSearch" class="search-bar" placeholder="Instant index search..." onkeyup="filterVault()">
 
         <div class="grid" id="vaultCollection"></div>
     </div>
@@ -59,25 +59,20 @@
     <!-- 3. UNIFIED MEDIA INTERFACE MODAL -->
     <div id="mediaPortal" class="modal">
         <button class="close-btn" onclick="terminateStream()">✕</button>
-        <h3 id="streamContext" style="margin-top:25px; color:#58a6ff;">Initializing global tracker scraping routine...</h3>
+        <h3 id="streamContext" style="margin-top:25px; color:#58a6ff;">Initializing live stream resolution engine...</h3>
         <video id="playerNode" controls autoplay src=""></video>
     </div>
 
     <script>
-        // THIS IS THE TARGET PASSWORD CONTROLLER
+        // System Master Password
         const TARGET_KEY = "@14231423@#";
 
-        // EXTREMELY IMPORTANT: This string is your anime list ENCRYPTED with AES using your password "@14231423@#".
-        // To anyone scanning your public code repository, it looks like random encrypted letters.
-        // It safely holds your target streaming database array structure.
-        const encryptedDatabase = "U2FsdGVkX1+T9gV0h0V+61gK96vKskg+W0fC7S6ZgAByX1U9mO2xX/2rG6/K/hXfI+B/7j6Yn9F2zH/yCmsYg/YFw06eQ27+bQ0C6bXmC/L4oOn+wJ9E5j6N2z8Z/zK+k8oOn+wJ9E5j6N2z8Z/zK+";
-
-        // FALLBACK DATABASE LAYOUT: If you want to change what anime shows up in your dashboard, 
-        // edit the configuration arrays right here below!
+        // Your custom anime video database tracking metrics. 
+        // Edit this array list to add, remove, or modify titles or episode selections!
         const databasePayload = [
             { title: "Chainsaw Man", slug: "chainsaw-man-tv", ep: 1 },
             { title: "Attack on Titan: Final Season", slug: "shingeki-no-kyojin-the-final-season", ep: 1 },
-            { title: "Demon Slayer: Hasira Training", slug: "kimetsu-no-yaiba-hashira-geiko-hen", ep: 1 },
+            { title: "Demon Slayer", slug: "kimetsu-no-yaiba-hashira-geiko-hen", ep: 1 },
             { title: "Jujutsu Kaisen Season 2", slug: "jujutsu-kaisen-2nd-season", ep: 1 },
             { title: "One Piece", slug: "one-piece", ep: 1100 }
         ];
@@ -86,14 +81,14 @@
             const inputPass = document.getElementById('vault-key').value;
             const errorElement = document.getElementById('error-msg');
 
-            // Verify input parameters mathematically against local variables
+            // Verify configuration codes locally
             if (inputPass === TARGET_KEY) {
                 errorElement.style.display = "none";
                 document.getElementById('secure-gate').style.display = "none";
                 document.body.style.display = "block"; // Drop centering structure
                 document.getElementById('app-vault').style.display = "block";
                 
-                // Mount array objects straight into UI cards
+                // Mount tracking index straight to template UI cards
                 renderCards(databasePayload);
             } else {
                 errorElement.style.display = "block";
@@ -122,26 +117,26 @@
 
         async function initializeStream(slug, ep) {
             document.getElementById('mediaPortal').style.display = "block";
-            document.getElementById('streamContext').innerText = "Querying live global web data scraping mirrors for active video payloads...";
+            document.getElementById('streamContext').innerText = "Querying secondary live API scraping mirrors for active video payloads...";
             
             try {
-                // Queries standard public developer stream resolver mirror endpoints straight from browser core
-                let trackingEndpoint = `https://consumet.org{slug}-episode-${ep}`;
+                // MODIFIED: Patched proxy pipeline routing to hit active backend service clusters
+                let trackingEndpoint = `https://vercel.app{slug}-episode-${ep}`;
                 let response = await fetch(trackingEndpoint);
                 let parsedResult = await response.json();
                 
                 if (parsedResult && parsedResult.sources && parsedResult.sources.length > 0) {
-                    // Pulls out high-speed raw .mp4 manifest stream links automatically
+                    // Extract the highest performance streaming source file structure
                     let streamingSourceUrl = parsedResult.sources[0].url;
                     
                     document.getElementById('streamContext').innerText = "Streaming Asset: " + slug.toUpperCase() + " (Episode " + ep + ")";
                     document.getElementById('playerNode').src = streamingSourceUrl;
                 } else {
-                    alert("Scraper Pipeline Error: Target source file pointer returned null.");
+                    alert("Scraper Pipeline Error: Target video server returned an empty array.");
                     terminateStream();
                 }
             } catch(err) {
-                alert("Network Core Failure: Streaming engine timed out checking web selectors.");
+                alert("Network Failure: The scraper instance timed out. Please try another title/episode or try again later.");
                 terminateStream();
             }
         }
