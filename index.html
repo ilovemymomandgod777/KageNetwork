@@ -43,7 +43,8 @@
         <h2 style="margin-top: 0; color: #c9d1d9;">🔒 Secure Core Entry</h2>
         <p style="color: #8b949e; font-size: 14px; margin-bottom: 25px;">Cryptographic verification is required to build the interface.</p>
         <input type="password" id="vault-key" placeholder="System Access Code">
-        <button onclick="unlockVault()">Unpack Archive</button>
+        <!-- FIXED: Removed inline onclick and swapped to pure ID hook configuration -->
+        <button id="gate-submit-btn">Decrypt</button>
         <p id="error-msg" style="color: #f85149; font-size: 14px; margin-top: 15px; display: none;">Key pairing rejected. Authentication failed.</p>
     </div>
 
@@ -55,9 +56,9 @@
         </div>
 
         <div class="search-controls">
-            <input type="text" id="mainSearch" class="search-bar" placeholder="Type any anime name (e.g., Bleach, Naruto, One Piece)..." onkeypress="handleKeyPress(event)">
+            <input type="text" id="mainSearch" class="search-bar" placeholder="Type any anime name (e.g., Bleach, Naruto, One Piece)...">
             <input type="number" id="episodeTarget" class="ep-input" placeholder="Ep #" value="1" min="1">
-            <button class="search-btn" onclick="executeGlobalSearch()">Search Archive</button>
+            <button id="search-trigger-btn" class="search-btn">Search Archive</button>
         </div>
 
         <div class="grid" id="vaultCollection">
@@ -67,106 +68,98 @@
 
     <!-- 3. UNIFIED MEDIA INTERFACE MODAL -->
     <div id="mediaPortal" class="modal">
-        <button class="close-btn" onclick="terminateStream()">✕</button>
+        <button class="close-btn" id="modal-close-btn">✕</button>
         <h3 id="streamContext" style="margin-top:25px; color:#58a6ff;">Loading video container...</h3>
         <iframe id="playerNode" src="" allowfullscreen="true" scrolling="no" frameborder="0"></iframe>
     </div>
 
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            const TARGET_KEY = "@14231423@#";
-
-            // Main validation execution step exposed globally via window binding
-            function unlockVault() {
-                var val = document.getElementById("vault-key").value;
-                var err = document.getElementById("error-msg");
-                if (val === TARGET_KEY) {
-                    err.style.display = "none";
-                    document.getElementById("secure-gate").style.display = "none";
-                    document.body.style.display = "block";
-                    document.getElementById("app-vault").style.display = "block";
-                    fetchTrendingAnime();
-                } else {
-                    err.style.display = "block";
-                    document.getElementById("vault-key").value = "";
-                }
+        // Use clean script listeners to keep scope fully aligned on compile routines
+        document.getElementById("gate-submit-btn").addEventListener("click", function() {
+            var val = document.getElementById("vault-key").value;
+            var err = document.getElementById("error-msg");
+            if (val === "@14231423@#") {
+                err.style.display = "none";
+                document.getElementById("secure-gate").style.display = "none";
+                document.body.style.display = "block";
+                document.getElementById("app-vault").style.display = "block";
+                fetchTrendingAnime();
+            } else {
+                err.style.display = "block";
+                document.getElementById("vault-key").value = "";
             }
+        });
 
-            function handleKeyPress(event) {
-                if (event.key === "Enter") {
-                    executeGlobalSearch();
-                }
-            }
+        document.getElementById("search-trigger-btn").addEventListener("click", executeGlobalSearch);
+        document.getElementById("mainSearch").addEventListener("keypress", function(event) {
+            if (event.key === "Enter") { executeGlobalSearch(); }
+        });
+        document.getElementById("modal-close-btn").addEventListener("click", terminateStream);
 
-            function fetchTrendingAnime() {
-                fetch("https://kitsu.io[limit]=10")
-                    .then(function(res) { return res.json(); })
-                    .then(function(parsed) { renderCards(parsed.data); })
-                    .catch(function(e) { console.log("Trending query dropped."); });
-            }
+        function fetchTrendingAnime() {
+            fetch("https://kitsu.io[limit]=10")
+                .then(function(res) { return res.json(); })
+                .then(function(parsed) { renderCards(parsed.data); })
+                .catch(function(e) { console.log("Trending query index timed out."); });
+        }
 
-            function executeGlobalSearch() {
-                var query = document.getElementById("mainSearch").value.trim();
-                var container = document.getElementById("vaultCollection");
-                if (!query) return;
+        function executeGlobalSearch() {
+            var query = document.getElementById("mainSearch").value.trim();
+            var container = document.getElementById("vaultCollection");
+            if (!query) return;
 
-                container.innerHTML = '<p style="color: #58a6ff; grid-column: 1/-1; text-align: center; margin-top: 40px;">Indexing live endpoints from global registers...</p>';
+            container.innerHTML = '<p style="color: #58a6ff; grid-column: 1/-1; text-align: center; margin-top: 40px;">Indexing live endpoints from global registers...</p>';
 
-                fetch("https://kitsu.io[text]=" + encodeURIComponent(query) + "&page[limit]=16")
-                    .then(function(res) { return res.json(); })
-                    .then(function(parsedResult) {
-                        if (parsedResult && parsedResult.data && parsedResult.data.length > 0) {
-                            renderCards(parsedResult.data);
-                        } else {
-                            container.innerHTML = '<p style="color: #f85149; grid-column: 1/-1; text-align: center; margin-top: 40px;">Zero records found matching query parameters.</p>';
-                        }
-                    })
-                    .catch(function(err) {
-                        container.innerHTML = '<p style="color: #f85149; grid-column: 1/-1; text-align: center; margin-top: 40px;">Database registry timeout error.</p>';
-                    });
-            }
+            fetch("https://kitsu.io[text]=" + encodeURIComponent(query) + "&page[limit]=16")
+                .then(function(res) { return res.json(); })
+                .then(function(parsedResult) {
+                    if (parsedResult && parsedResult.data && parsedResult.data.length > 0) {
+                        renderCards(parsedResult.data);
+                    } else {
+                        container.innerHTML = '<p style="color: #f85149; grid-column: 1/-1; text-align: center; margin-top: 40px;">Zero records found matching query parameters.</p>';
+                    }
+                })
+                .catch(function(err) {
+                    container.innerHTML = '<p style="color: #f85149; grid-column: 1/-1; text-align: center; margin-top: 40px;">Database registry timeout error.</p>';
+                });
+        }
 
-            function renderCards(animeList) {
-                var container = document.getElementById("vaultCollection");
-                var targetEp = parseInt(document.getElementById("episodeTarget").value) || 1;
-                var htmlOutput = "";
+        function renderCards(animeList) {
+            var container = document.getElementById("vaultCollection");
+            var targetEp = parseInt(document.getElementById("episodeTarget").value) || 1;
+            var htmlOutput = "";
 
-                for (var i = 0; i < animeList.length; i++) {
-                    var item = animeList[i];
-                    var attr = item.attributes;
-                    var title = attr.canonicalTitle || attr.en || attr.en_jp;
-                    var poster = attr.posterImage ? attr.posterImage.medium : "https://placeholder.com";
-                    var searchSlug = attr.slug || title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+            for (var i = 0; i < animeList.length; i++) {
+                var item = animeList[i];
+                var attr = item.attributes;
+                var title = attr.canonicalTitle || attr.en || attr.en_jp;
+                var poster = attr.posterImage ? attr.posterImage.medium : "https://placeholder.com";
+                var searchSlug = attr.slug || title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 
-                    htmlOutput += '<div class="card">' +
-                        '<div class="poster-wrapper">' +
-                            '<img class="poster-img" src="' + poster + '" alt="' + title + '" loading="lazy">' +
-                        '</div>' +
-                        '<div class="card-details">' +
-                            '<h3 class="card-title" title="' + title + '">' + title + '</h3>' +
-                            '<div>' +
-                                '<span style="font-size:11px; color:#58a6ff; background:rgba(88,166,255,0.1); padding:3px 8px; border-radius:12px; font-family:monospace; display:inline-block; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">ID: ' + searchSlug + '</span>' +
-                                '<button class="play-btn" onclick="initializeStream(\'' + searchSlug + '\', ' + targetEp + ')">▶ Stream Ep ' + targetEp + '</button>' +
-                            '</div>' +
+                // Hook up structural global initialization parameters to work natively on click loops
+                htmlOutput += '<div class="card">' +
+                    '<div class="poster-wrapper">' +
+                        '<img class="poster-img" src="' + poster + '" alt="' + title + '" loading="lazy">' +
+                    '</div>' +
+                    '<div class="card-details">' +
+                        '<h3 class="card-title" title="' + title + '">' + title + '</h3>' +
+                        '<div>' +
+                            '<span style="font-size:11px; color:#58a6ff; background:rgba(88,166,255,0.1); padding:3px 8px; border-radius:12px; font-family:monospace; display:inline-block; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">ID: ' + searchSlug + '</span>' +
+                            '<button class="play-btn" onclick="window.initializeStream(\'' + searchSlug + '\', ' + targetEp + ')">▶ Stream Ep ' + targetEp + '</button>' +
                         '</div>' +
 Use code with caution.
+'' +
 '';
 }
 container.innerHTML = htmlOutput;
 }
-function initializeStream(slug, ep) {
+// Attach stream launcher properties cleanly straight to windows context scope arrays
+window.initializeStream = function(slug, ep) {
 document.getElementById("mediaPortal").style.display = "block";
 document.getElementById("streamContext").innerText = "Streaming Asset: " + slug.toUpperCase() + " (Episode " + ep + ")";
 document.getElementById("playerNode").src = "vidsrc.me" + slug + "/" + ep;
-}
+};
 function terminateStream() {
 document.getElementById("playerNode").src = "";
 document.getElementById("mediaPortal").style.display = "none";
 }
-// EXPLICIT GLOBAL EXPOSURE: Links internal code execution context straight to public DOM button onclick paths
-window.unlockVault = unlockVault;
-window.handleKeyPress = handleKeyPress;
-window.executeGlobalSearch = executeGlobalSearch;
-window.initializeStream = initializeStream;
-window.terminateStream = terminateStream;
-});
