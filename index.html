@@ -13,7 +13,6 @@
         button { background: #58a6ff; color: #0c0f12; font-weight: bold; cursor: pointer; transition: 0.2s; width: 100%; }
         button:hover { background: #79c0ff; }
         
-        /* Dashboard Interface Layout */
         #app-vault { display: none; width: 100%; max-width: 1200px; align-self: flex-start; margin-top: 20px; }
         .header-area { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #21262d; padding-bottom: 20px; margin-bottom: 25px; }
         .search-controls { display: flex; gap: 10px; margin-bottom: 25px; }
@@ -22,7 +21,6 @@
         .search-btn { width: 150px; background: #238636; color: white; margin: 0; }
         .search-btn:hover { background: #2ea043; }
         
-        /* Dynamic Poster Card Grid Layout */
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 25px; }
         .card { background: #161b22; border-radius: 8px; border: 1px solid #30363d; transition: 0.2s; position: relative; overflow: hidden; display: flex; flex-direction: column; }
         .card:hover { border-color: #58a6ff; transform: translateY(-4px); }
@@ -32,7 +30,6 @@
         .card-title { margin: 0 0 10px 0; color: #c9d1d9; font-size: 16px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
         .play-btn { background: #58a6ff; color: #0c0f12; font-weight: bold; width: 100%; cursor: pointer; margin-top: 10px; padding: 10px; }
         
-        /* Streaming Overlay Modal */
         .modal { display:none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); text-align:center; z-index: 9999; }
         iframe { width: 90%; max-width: 950px; height: 550px; margin-top: 5%; border: 1px solid #30363d; background: #000; box-shadow: 0 0 30px rgba(0,0,0,0.7); border-radius: 6px; }
         .close-btn { position:absolute; top:25px; right:35px; background:none; color:#8b949e; font-size:32px; border:none; cursor:pointer; }
@@ -41,7 +38,7 @@
 </head>
 <body>
 
-    <!-- 1. SECURE PASS GAUNTLET -->
+    <!-- 1. GAUNTLET ENTRY -->
     <div id="secure-gate" class="gate-container">
         <h2 style="margin-top: 0; color: #c9d1d9;">🔒 Secure Core Entry</h2>
         <p style="color: #8b949e; font-size: 14px; margin-bottom: 25px;">Cryptographic verification is required to build the interface.</p>
@@ -50,16 +47,15 @@
         <p id="error-msg" style="color: #f85149; font-size: 14px; margin-top: 15px; display: none;">Key pairing rejected. Authentication failed.</p>
     </div>
 
-    <!-- 2. PROTECTED INTERFACE AREA -->
+    <!-- 2. CORE LAYOUT APP -->
     <div id="app-vault">
         <div class="header-area">
             <h2 style="margin:0; color: #c9d1d9;">📡 Global Anime Discovery Core</h2>
             <button onclick="location.reload()" style="background: #da3633; color: white; width: auto; padding: 8px 15px; margin: 0;">Lock Drive</button>
         </div>
 
-        <!-- Global Search Controller Inputs -->
         <div class="search-controls">
-            <input type="text" id="mainSearch" class="search-bar" placeholder="Type any anime name (e.g., Bleach, Naruto, Boruto)..." onkeypress="handleKeyPress(event)">
+            <input type="text" id="mainSearch" class="search-bar" placeholder="Type any anime name (e.g., Bleach, Naruto, One Piece)..." onkeypress="handleKeyPress(event)">
             <input type="number" id="episodeTarget" class="ep-input" placeholder="Ep #" value="1" min="1">
             <button class="search-btn" onclick="executeGlobalSearch()">Search Archive</button>
         </div>
@@ -89,7 +85,6 @@
                 document.body.style.display = "block";
                 document.getElementById('app-vault').style.display = "block";
                 
-                // Load trending anime automatically on login as a placeholder placeholder
                 fetchTrendingAnime();
             } else {
                 errorElement.style.display = "block";
@@ -103,7 +98,6 @@
             }
         }
 
-        // Fetches live trending items automatically via Kitsu platform
         async function fetchTrendingAnime() {
             try {
                 let response = await fetch('https://kitsu.io[limit]=10');
@@ -114,27 +108,25 @@
             }
         }
 
-        // Live engine queries database on demand
         async function executeGlobalSearch() {
             const query = document.getElementById('mainSearch').value.trim();
             const container = document.getElementById('vaultCollection');
             if(!query) return;
 
-            container.innerHTML = `<p style="color: #58a6ff; grid-column: 1/-1; text-align: center; margin-top: 40px;">Indexing live endpoints from global registers...</p>`;
+            container.innerHTML = '<p style="color: #58a6ff; grid-column: 1/-1; text-align: center; margin-top: 40px;">Indexing live endpoints from global registers...</p>';
 
             try {
-                // Hits Kitsu API directly from the client side browser environment
-                let targetUrl = `https://kitsu.io[text]=${encodeURIComponent(query)}&page[limit]=16`;
+                let targetUrl = 'https://kitsu.io[text]=' + encodeURIComponent(query) + '&page[limit]=16';
                 let response = await fetch(targetUrl);
                 let parsedResult = await response.json();
 
                 if(parsedResult && parsedResult.data && parsedResult.data.length > 0) {
                     renderCards(parsedResult.data);
                 } else {
-                    container.innerHTML = `<p style="color: #f85149; grid-column: 1/-1; text-align: center; margin-top: 40px;">Zero records found matching query parameters.</p>`;
+                    container.innerHTML = '<p style="color: #f85149; grid-column: 1/-1; text-align: center; margin-top: 40px;">Zero records found matching query parameters.</p>';
                 }
             } catch(err) {
-                container.innerHTML = `<p style="color: #f85149; grid-column: 1/-1; text-align: center; margin-top: 40px;">Database registry timeout error.</p>`;
+                container.innerHTML = '<p style="color: #f85149; grid-column: 1/-1; text-align: center; margin-top: 40px;">Database registry timeout error.</p>';
             }
         }
 
@@ -145,17 +137,33 @@
             container.innerHTML = animeList.map(item => {
                 const attributes = item.attributes;
                 const title = attributes.canonicalTitle || attributes.en || attributes.en_jp;
-                // Safely grab the high quality portrait image string variable from JSON structures
                 const poster = attributes.posterImage ? attributes.posterImage.medium : 'https://placeholder.com';
-                // Slug parameter string conversions
                 const searchSlug = attributes.slug || title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 
-                return `
-                    <div class="card">
-                        <div class="poster-wrapper">
-                            <img class="poster-img" src="${poster}" alt="${title}" loading="lazy">
-                        </div>
-                        <div class="card-details">
-                            <h3 class="card-title" title="${title}">${title}</h3>
-                            <div>
-                                <span style="font-size:11px; color:#58a6ff; background:rgba(88,166,255,0.1); padding:3px 8px; border-radius:12px; font-family:monospace; display:inline-block; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">ID: ${searchSlug}</span>
+                return '<div class="card">' +
+                        '<div class="poster-wrapper">' +
+                            '<img class="poster-img" src="' + poster + '" alt="' + title + '" loading="lazy">' +
+                        '</div>' +
+                        '<div class="card-details">' +
+                            '<h3 class="card-title" title="' + title + '">' + title + '</h3>' +
+                            '<div>' +
+                                '<span style="font-size:11px; color:#58a6ff; background:rgba(88,166,255,0.1); padding:3px 8px; border-radius:12px; font-family:monospace; display:inline-block; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">ID: ' + searchSlug + '</span>' +
+                                '<button class="play-btn" onclick="initializeStream(\'' + searchSlug + '\', ' + targetEp + ')">▶ Stream Ep ' + targetEp + '</button>' +
+                            '</div>' +
+                        '</div>' +
+                    '</div>';
+            }).join('');
+        }
+
+        function initializeStream(slug, ep) {
+            document.getElementById('mediaPortal').style.display = "block";
+            document.getElementById('streamContext').innerText = "Streaming Asset: " + slug.toUpperCase() + " (Episode " + ep + ")";
+            
+let embedUrl = 'vidsrc.me' + slug + '/' + ep;
+document.getElementById('playerNode').src = embedUrl;
+}
+function terminateStream() {
+let frame = document.getElementById('playerNode');
+frame.src = "";
+document.getElementById('mediaPortal').style.display = "none";
+}
